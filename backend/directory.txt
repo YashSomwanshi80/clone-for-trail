@@ -1,0 +1,142 @@
+anpr-backend/
+├── pom.xml
+├── src/
+│   ├── main/
+│   │   ├── java/com/bel/anpr/
+│   │   │   ├── AnprApplication.java
+│   │   │   │
+│   │   │   ├── config/
+│   │   │   │   ├── SecurityConfig.java          # JWT filter chain + internal-endpoint auth
+│   │   │   │   ├── KafkaConfig.java              # topic beans, producer/consumer factories
+│   │   │   │   ├── RedisConfig.java              # RedisTemplate bean
+│   │   │   │   ├── WebSocketConfig.java          # /ws/alerts, /ws/analytics/live endpoints
+│   │   │   │   ├── OpenApiConfig.java            # springdoc metadata
+│   │   │   │   └── CorsConfig.java               # allow the Vite dev server origin
+│   │   │   │
+│   │   │   ├── auth/
+│   │   │   │   ├── AuthController.java           # /api/v1/auth/login, refresh, logout
+│   │   │   │   ├── AuthService.java
+│   │   │   │   ├── JwtTokenProvider.java         # issue/validate JWTs
+│   │   │   │   ├── JwtAuthFilter.java            # request filter, sets SecurityContext
+│   │   │   │   └── dto/
+│   │   │   │       ├── LoginRequest.java
+│   │   │   │       └── AuthResponse.java
+│   │   │   │
+│   │   │   ├── user/
+│   │   │   │   ├── User.java
+│   │   │   │   ├── Role.java
+│   │   │   │   ├── UserRepository.java
+│   │   │   │   ├── RoleRepository.java
+│   │   │   │   ├── UserService.java
+│   │   │   │   ├── UserController.java           # /api/v1/users
+│   │   │   │   ├── RoleController.java           # /api/v1/roles
+│   │   │   │   └── dto/
+│   │   │   │       ├── UserRequest.java
+│   │   │   │       └── UserResponse.java
+│   │   │   │
+│   │   │   ├── camera/
+│   │   │   │   ├── Camera.java
+│   │   │   │   ├── CameraSegment.java
+│   │   │   │   ├── CameraRepository.java
+│   │   │   │   ├── CameraSegmentRepository.java
+│   │   │   │   ├── CameraService.java
+│   │   │   │   ├── CameraController.java         # /api/v1/cameras
+│   │   │   │   ├── CameraSegmentController.java  # /api/v1/cameras/{id}/segments
+│   │   │   │   └── dto/
+│   │   │   │       ├── CameraRequest.java
+│   │   │   │       ├── CameraResponse.java
+│   │   │   │       └── CameraSegmentRequest.java
+│   │   │   │
+│   │   │   ├── media/
+│   │   │   │   ├── Media.java
+│   │   │   │   ├── MediaRepository.java
+│   │   │   │   ├── MediaService.java
+│   │   │   │   ├── MediaController.java          # /api/v1/media
+│   │   │   │   └── dto/
+│   │   │   │       ├── MediaRegisterRequest.java
+│   │   │   │       └── MediaResponse.java
+│   │   │   │
+│   │   │   ├── detection/
+│   │   │   │   ├── Detection.java
+│   │   │   │   ├── DetectionRepository.java
+│   │   │   │   ├── DetectionIngestionController.java  # /api/internal/v1/detections (Python-only)
+│   │   │   │   ├── DetectionIngestionService.java      # validates, saves, publishes to Kafka
+│   │   │   │   └── dto/
+│   │   │   │       ├── DetectionEventRequest.java      # matches Python's output contract
+│   │   │   │       └── DetectionEventBatchRequest.java
+│   │   │   │
+│   │   │   ├── trajectory/
+│   │   │   │   ├── TrajectoryService.java        # PostGIS spatial-temporal queries
+│   │   │   │   ├── TrajectoryController.java     # /api/v1/trajectories/{plateNumber}
+│   │   │   │   └── dto/
+│   │   │   │       └── TrajectoryPointResponse.java
+│   │   │   │
+│   │   │   ├── blacklist/
+│   │   │   │   ├── BlacklistEntry.java
+│   │   │   │   ├── BlacklistRepository.java
+│   │   │   │   ├── BlacklistService.java
+│   │   │   │   ├── BlacklistController.java      # /api/v1/blacklist
+│   │   │   │   └── dto/
+│   │   │   │       └── BlacklistRequest.java
+│   │   │   │
+│   │   │   ├── alert/
+│   │   │   │   ├── Alert.java
+│   │   │   │   ├── AlertRepository.java
+│   │   │   │   ├── AlertService.java             # anomaly rule checks
+│   │   │   │   ├── AlertController.java          # /api/v1/alerts
+│   │   │   │   ├── AlertWebSocketHandler.java    # /ws/alerts relay
+│   │   │   │   └── dto/
+│   │   │   │       └── AlertResponse.java
+│   │   │   │
+│   │   │   ├── analytics/
+│   │   │   │   ├── AnalyticsController.java      # /api/v1/analytics/*
+│   │   │   │   ├── AnalyticsService.java         # reads pre-aggregated tables/Redis
+│   │   │   │   ├── AnalyticsWebSocketHandler.java # /ws/analytics/live relay
+│   │   │   │   ├── streams/
+│   │   │   │   │   └── AnalyticsStreamTopology.java  # Kafka Streams: density, O-D, congestion, speed
+│   │   │   │   └── dto/
+│   │   │   │       ├── HeatmapResponse.java
+│   │   │   │       ├── DensityResponse.java
+│   │   │   │       ├── OdMatrixResponse.java
+│   │   │   │       ├── CongestionResponse.java
+│   │   │   │       └── SpeedResponse.java
+│   │   │   │
+│   │   │   ├── kafka/
+│   │   │   │   ├── KafkaTopics.java              # topic name constants (anpr.detection.events, etc.)
+│   │   │   │   ├── DetectionEventProducer.java
+│   │   │   │   ├── PersistenceConsumer.java
+│   │   │   │   ├── TrajectoryConsumer.java
+│   │   │   │   └── AlertConsumer.java
+│   │   │   │
+│   │   │   ├── audit/
+│   │   │   │   ├── AuditLog.java
+│   │   │   │   ├── AuditLogRepository.java
+│   │   │   │   ├── AuditLogService.java
+│   │   │   │   └── AuditController.java          # /api/v1/audit/trajectory-queries
+│   │   │   │
+│   │   │   ├── common/
+│   │   │   │   ├── GeoUtils.java                 # lat/lng ↔ JTS Point helpers
+│   │   │   │   ├── exception/
+│   │   │   │   │   ├── ResourceNotFoundException.java
+│   │   │   │   │   ├── GlobalExceptionHandler.java   # @ControllerAdvice
+│   │   │   │   │   └── ApiErrorResponse.java
+│   │   │   │   └── ApiResponse.java              # generic response wrapper, if used
+│   │   │   │
+│   │   │   └── security/
+│   │   │       ├── InternalApiKeyFilter.java     # secures /api/internal/v1/* separately from JWT
+│   │   │       └── RoleConstants.java            # TRAFFIC_POLICE, CITY_ADMIN, AUDITOR
+│   │   │
+│   │   └── resources/
+│   │       ├── application.yml
+│   │       ├── application-local.yml             # local dev overrides (DB creds etc.)
+│   │       └── db/migration/                     # (once you move off ddl-auto to Flyway)
+│   │           └── V1__init_schema.sql
+│   │
+│   └── test/
+│       └── java/com/bel/anpr/
+│           ├── camera/CameraControllerTest.java
+│           ├── camera/CameraServiceTest.java
+│           ├── detection/DetectionIngestionControllerTest.java
+│           └── trajectory/TrajectoryServiceTest.java
+│
+└── README.md
