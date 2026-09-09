@@ -5,11 +5,12 @@ spring:
     url: jdbc:postgresql://localhost:5432/neuratransit
     username: neura_user
     password: SIH2026
-  hibernate:
-    ddl-auto: update
+  jpa:
+    hibernate:
+      ddl-auto: update
     properties:
       hibernate:
-        dialect: org.hibernate.spatial.dialect.postgis.PostgisPG10Dialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
   data:
     redis:
       host: localhost
@@ -25,5 +26,12 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.trusted.packages: "com.amigos.backend.*"
+
 server:
   port: 8080
+
+anpr:
+  internal-api-key: "local-dev-internal-key-change-me"
+  jwt-secret: "change-this-to-a-long-random-secret-at-least-32-bytes-for-local-dev"
+  jwt-expiration-ms: 3600000
+  refresh-token-expiration-days: 7

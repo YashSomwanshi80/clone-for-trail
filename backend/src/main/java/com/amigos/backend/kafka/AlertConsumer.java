@@ -1,33 +1,31 @@
 package com.amigos.backend.kafka;
 
+import com.amigos.backend.alert.Alert;
 import com.amigos.backend.alert.AlertService;
-import com.amigos.backend.detection.Detection;
-import com.amigos.backend.detection.DetectionRepository;
-import com.amigos.backend.detection.dto.DetectionEventRequest;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
+
+import java.util.Optional;
 
 @Component
 public class AlertConsumer {
 
     private final AlertService alertService;
-    private final DetectionRepository detectionRepository;
+    private final KafkaTemplate<String, Alert> alertKafkaTemplate;
 
-    public AlertConsumer(AlertService alertService, DetectionRepository detectionRepository) {
+    public AlertConsumer(AlertService alertService, KafkaTemplate<String, Alert> alertKafkaTemplate) {
         this.alertService = alertService;
-        this.detectionRepository = detectionRepository;
+        this.alertKafkaTemplate = alertKafkaTemplate;
     }
 
     @KafkaListener(topics = KafkaTopics.DETECTION_EVENTS, groupId = "alert-consumer")
-    public void onDetectionEvent(DetectionEventRequest event) {
-        // look up the detection we just persisted synchronously in DetectionIngestionService,
-        // to get its generated ID and resolved cityId for the alert record
-        Detection detection = detectionRepository
-            .findTopByPlateNumberOrderByTimestampDesc(event.plateNumber())
-            .orElse(null);
+    public void onDetectionEvent(DetectionPersistedEvent event) {
+        Optional<Alert> raised = alertService.raiseIfBlacklisted(
+            event.raw(), event.detectionId(), event.cityId());
 
-        if (detection == null) return; // shouldn't happen, but don't blow up the consumer thread
-
-        alertService.raiseIfBlacklisted(event, detection.getDetectionId(), detection.getCityId());
+        // publish only if an alert was actually raised — pushes to /ws/alerts via the relay below
+        raised.ifPresent(alert ->
+            alertKafkaTemplate.send(KafkaTopics.ALERTS, alert.getPlateNumber(), alert));
     }
 }

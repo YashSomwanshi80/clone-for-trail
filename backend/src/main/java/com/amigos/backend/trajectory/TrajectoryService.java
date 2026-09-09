@@ -1,5 +1,6 @@
 package com.amigos.backend.trajectory;
 
+import com.amigos.backend.common.GeoUtils;
 import com.amigos.backend.common.exception.ResourceNotFoundException;
 import com.amigos.backend.detection.Detection;
 import com.amigos.backend.detection.DetectionRepository;
@@ -24,8 +25,6 @@ public class TrajectoryService {
             .stream()
             .map(this::toPoint)
             .toList();
-        // NOTE: response shape here is the forward-compatibility contract from SRS §3.4 —
-        // this won't change if cross-city fan-out is added later; only how it's populated will.
     }
 
     public TrajectoryPointResponse getLastSeen(String plateNumber) {
@@ -37,8 +36,8 @@ public class TrajectoryService {
     private TrajectoryPointResponse toPoint(Detection d) {
         return new TrajectoryPointResponse(
             d.getCameraId(),
-            d.getGeo().getY(),
-            d.getGeo().getX(),
+            GeoUtils.getLat(d.getGeo()),
+            GeoUtils.getLng(d.getGeo()),
             d.getTimestamp(),
             d.getDirection(),
             d.getConfidence()

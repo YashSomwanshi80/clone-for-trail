@@ -3,21 +3,14 @@ package com.amigos.backend.camera;
 import com.amigos.backend.camera.dto.CameraRequest;
 import com.amigos.backend.camera.dto.CameraResponse;
 import com.amigos.backend.camera.dto.CameraSegmentRequest;
+import com.amigos.backend.common.GeoUtils;
 import com.amigos.backend.common.exception.ResourceNotFoundException;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.Point;
-import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
 public class CameraService {
-
-    // 4326 = WGS84, the standard lat/lng coordinate system (what GPS/Google Maps use)
-    private static final GeometryFactory GEOMETRY_FACTORY =
-        new GeometryFactory(new PrecisionModel(), 4326);
 
     private final CameraRepository cameraRepository;
     private final CameraSegmentRepository segmentRepository;
@@ -32,7 +25,7 @@ public class CameraService {
         camera.setCameraId(request.cameraId());
         camera.setCityId(request.cityId());
         camera.setStateId(request.stateId());
-        camera.setGeo(toPoint(request.lat(), request.lng()));
+        camera.setGeo(GeoUtils.toPoint(request.lat(), request.lng()));
         camera.setOrientation(request.orientation());
         camera.setLaneMetadata(request.laneMetadata());
 
@@ -61,7 +54,6 @@ public class CameraService {
     }
 
     public CameraSegment addSegment(String fromCameraId, CameraSegmentRequest request) {
-        // fail fast if either camera doesn't exist — avoids orphaned segment records
         if (!cameraRepository.existsById(fromCameraId)) {
             throw new ResourceNotFoundException("Camera not found: " + fromCameraId);
         }
@@ -80,18 +72,13 @@ public class CameraService {
         return segmentRepository.findByFromCameraId(cameraId);
     }
 
-    private Point toPoint(double lat, double lng) {
-        // JTS coordinates are (x=lng, y=lat) — reversed from how we normally say "lat, lng"
-        return GEOMETRY_FACTORY.createPoint(new Coordinate(lng, lat));
-    }
-
     private CameraResponse toResponse(Camera c) {
         return new CameraResponse(
             c.getCameraId(),
             c.getCityId(),
             c.getStateId(),
-            c.getGeo().getY(),
-            c.getGeo().getX(),
+            GeoUtils.getLat(c.getGeo()),
+            GeoUtils.getLng(c.getGeo()),
             c.getOrientation(),
             c.getStatus().name()
         );
