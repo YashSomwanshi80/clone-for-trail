@@ -39,6 +39,6 @@ public class SecurityConfig {
             .addFilterBefore(internalApiKeyFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
-        return http;
+        return http.build();
     }
 }
