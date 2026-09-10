@@ -1,0 +1,141 @@
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Base neutrals — Obsidian Operations */
+  --color-obsidian: #0a0b0d;
+  --color-deep-graphite: #111315;
+  --color-graphite: #191c20;
+  --color-raised: #20242a;
+  --color-border-soft: #2c3138;
+
+  /* Brand accent — mineral teal */
+  --color-teal: #57c7b5;
+  --color-teal-deep: #2a7f78;
+  --color-teal-soft: #8edbd0;
+
+  /* Secondary accent — brass */
+  --color-brass: #b79a62;
+  --color-brass-soft: #d0b884;
+
+  /* Semantic */
+  --color-critical: #c95b63;
+  --color-warning: #c58a4a;
+  --color-success: #62b78a;
+  --color-info: #7196b8;
+
+  /* Text */
+  --color-text-primary: #f0f1ee;
+  --color-text-secondary: #b4bac1;
+  --color-text-tertiary: #7e858d;
+  --color-text-disabled: #565c63;
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border-soft);
+  }
+  html {
+    color-scheme: dark;
+  }
+  body {
+    background-color: var(--color-obsidian);
+    color: var(--color-text-primary);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    /* Defensive only — Chrome's Caret Browsing (F7) is a browser-level
+       setting and can't actually be disabled from page CSS. This does not
+       block text selection (e.g. copying a plate number), only the
+       editable-content caret behavior. */
+    -webkit-user-modify: read-only;
+  }
+  ::selection {
+    background-color: var(--color-teal-deep);
+    color: var(--color-text-primary);
+  }
+
+  /* Visible focus states everywhere, no color-only reliance */
+  :focus-visible {
+    outline: 2px solid var(--color-teal);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-deep-graphite);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-raised);
+    border-radius: 8px;
+    border: 2px solid var(--color-deep-graphite);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-border-soft);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  .mono-data {
+    font-family: var(--font-mono);
+    font-feature-settings: "tnum" 1;
+    letter-spacing: 0.01em;
+  }
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+}
+
+/* Leaflet dark basemap tuning: recede behind operational data */
+.leaflet-container {
+  background: var(--color-deep-graphite);
+  font-family: var(--font-sans);
+}
+.leaflet-control-attribution {
+  background: rgba(10, 11, 13, 0.7) !important;
+  color: var(--color-text-tertiary) !important;
+  font-size: 10px !important;
+}
+.leaflet-control-attribution a {
+  color: var(--color-text-secondary) !important;
+}
+.leaflet-control-zoom a {
+  background: var(--color-raised) !important;
+  color: var(--color-text-primary) !important;
+  border-color: var(--color-border-soft) !important;
+}
+.leaflet-popup-content-wrapper {
+  background: var(--color-graphite) !important;
+  color: var(--color-text-primary) !important;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 10px !important;
+}
+.leaflet-popup-tip {
+  background: var(--color-graphite) !important;
+}
+.map-tiles-dark {
+  /* OpenStreetMap's standard tiles are light by default (no dark variant
+     without an API-keyed provider) — invert + tint to match the app's dark
+     theme instead of relying on a tile server to already be dark. */
+  filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.92) saturate(0.4);
+}
