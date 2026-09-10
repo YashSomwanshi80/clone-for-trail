@@ -10,7 +10,7 @@ import { formatTime } from '@/lib/utils'
 import { HeatmapMap } from '@/components/maps/DarkMap'
 import type { AnalyticsSnapshot, HeatmapPoint, ODFlowEntry } from '@/types'
 
-const TEAL = '#57C7B5'
+const TEAL = '#6C5FD1'
 const BRASS = '#B79A62'
 const INFO = '#7196B8'
 

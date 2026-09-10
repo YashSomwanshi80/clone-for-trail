@@ -1,7 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from '@/context/AuthContext'
+import { ThemeProvider } from '@/context/ThemeContext'
 import { ToastProvider } from '@/components/ui/Toast'
+import { ScanWipeProvider } from '@/components/transitions/ScanWipe'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { RequireAuth, RequireRole } from '@/routes/guards'
 import { LoginPage } from '@/pages/LoginPage'
@@ -19,7 +21,9 @@ export default function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <ToastProvider>
+          <ThemeProvider>
           <AuthProvider>
+            <ScanWipeProvider>
             <BrowserRouter>
             <Routes>
               <Route path="/login" element={<LoginPage />} />
@@ -61,8 +65,10 @@ export default function App() {
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           </BrowserRouter>
-        </AuthProvider>
-      </ToastProvider>
+            </ScanWipeProvider>
+          </AuthProvider>
+          </ThemeProvider>
+        </ToastProvider>
     </QueryClientProvider>
   </ErrorBoundary>
   )

@@ -10,9 +10,12 @@ import {
   ShieldAlert,
   Users,
   Radio,
+  Sun,
+  Moon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/context/AuthContext'
+import { useTheme } from '@/context/ThemeContext'
 import { SystemStatusBadge } from '@/components/ui/Badge'
 import { camerasApi } from '@/lib/api/java'
 import type { SystemStatus } from '@/types'
@@ -60,6 +63,7 @@ const GROUPS: NavGroup[] = [
 
 export function Sidebar() {
   const { role } = useAuth()
+  const { theme, toggleTheme } = useTheme()
   const [systemStatus, setSystemStatus] = useState<SystemStatus>('OPERATIONAL')
 
   // useQuery — reads from shared 'cameras' cache, no extra fetch if Dashboard loaded first
@@ -125,11 +129,19 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="border-t border-border-soft px-3 py-3">
+      <div className="border-t border-border-soft px-3 py-3 space-y-2">
         <div className="flex items-center justify-between rounded-md bg-raised px-2.5 py-2">
           <span className="text-[11px] text-text-tertiary">System</span>
           <SystemStatusBadge status={systemStatus} />
         </div>
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className="flex w-full items-center justify-between rounded-md bg-raised px-2.5 py-2 text-[11px] text-text-tertiary hover:text-text-primary transition-colors"
+        >
+          <span>{theme === 'dark' ? 'Dark mode' : 'Light mode'}</span>
+          {theme === 'dark' ? <Moon className="h-3.5 w-3.5" /> : <Sun className="h-3.5 w-3.5" />}
+        </button>
       </div>
     </aside>
   )

@@ -6,9 +6,11 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { NeonReveal } from '@/components/ui/NeonReveal'
 import { useAuth } from '@/context/AuthContext'
+import { useScanWipe } from '@/components/transitions/ScanWipe'
 
 export function LoginPage() {
   const { login } = useAuth()
+  const { cover, reveal } = useScanWipe()
   const navigate = useNavigate()
   const [userId, setUserId] = useState('')
   const [password, setPassword] = useState('')
@@ -28,10 +30,13 @@ export function LoginPage() {
     setLoading(true)
     try {
       await login(userId.trim(), password)
+      // Cover the screen before swapping routes so the dashboard mounts
+      // unseen underneath, then wipe it in with the scan-line reveal.
+      await cover()
       navigate('/dashboard', { replace: true })
+      reveal()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed — check your credentials')
-    } finally {
       setLoading(false)
     }
   }
@@ -40,7 +45,7 @@ export function LoginPage() {
     <NeonReveal
       revealDelay={250}
       revealDuration={1400}
-      hue={172}
+      hue={249}
       intensity={1.1}
       onComplete={() => setRevealed(true)}
       className="min-h-screen bg-obsidian flex items-center justify-center px-4"

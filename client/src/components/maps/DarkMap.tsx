@@ -4,12 +4,20 @@ import { MapContainer, TileLayer, CircleMarker, Polyline, Popup, useMap, Marker 
 import type { Camera, TrajectoryPoint, HeatmapPoint } from '@/types'
 import * as L from 'leaflet'
 import 'leaflet.heat'
+import { useTheme } from '@/context/ThemeContext'
 
-const TEAL = '#57C7B5'
-const TEAL_BRIGHT = '#8EDBD0'
-const BRASS = '#B79A62'
-const CRIMSON = '#C95B63'
-const MUTED = '#565C63'
+// Leaflet's SVG/canvas renderer can't resolve CSS custom properties, so the
+// map's marker colors are kept as literal hex, mirrored per theme from
+// globals.css rather than reused from there.
+const PALETTE = {
+  dark: { primary: '#6C5FD1', primaryBright: '#A49BEA', secondary: '#4A4870', critical: '#D65D6B', warning: '#D9A83F', muted: '#565C63' },
+  light: { primary: '#5B4FC4', primaryBright: '#8A7FE0', secondary: '#6B688F', critical: '#B23A47', warning: '#B37F2E', muted: '#8A8377' },
+} as const
+
+function useMapPalette() {
+  const { theme } = useTheme()
+  return PALETTE[theme]
+}
 
 // Standard OpenStreetMap raster tiles — genuinely free, no API key required.
 // (CARTO's basemaps.cartocdn.com now requires a free API key and serves an
@@ -63,21 +71,23 @@ export function CameraMap({
   }, [cameras, center])
 
   const selected = cameras.find((c) => c.id === selectedId)
+  const { theme } = useTheme()
+  const palette = useMapPalette()
 
   return (
     <div style={{ height }} className="overflow-hidden rounded-lg border border-border-soft">
-      <MapContainer center={mapCenter} zoom={12} style={{ height: '100%', width: '100%' }} zoomControl={true}>
-        <TileLayer className="map-tiles-dark" attribution={TILE_ATTRIBUTION} url={TILE_URL} />
+      <MapContainer key={theme} center={mapCenter} zoom={12} style={{ height: '100%', width: '100%' }} zoomControl={true}>
+        <TileLayer className={theme === 'dark' ? 'map-tiles-dark' : ''} attribution={TILE_ATTRIBUTION} url={TILE_URL} />
         {cameras.map((cam) => {
           const isSelected = cam.id === selectedId
-          const color = cam.status === 'ONLINE' ? (isSelected ? BRASS : TEAL) : cam.status === 'MAINTENANCE' ? '#C58A4A' : MUTED
+          const color = cam.status === 'ONLINE' ? (isSelected ? palette.secondary : palette.primary) : cam.status === 'MAINTENANCE' ? palette.warning : palette.muted
           return (
             <CircleMarker
               key={cam.id}
               center={[cam.lat, cam.lng]}
               radius={isSelected ? 8 : 6}
               pathOptions={{
-                color: isSelected ? BRASS : color,
+                color: isSelected ? palette.secondary : color,
                 fillColor: color,
                 fillOpacity: 0.85,
                 weight: isSelected ? 3 : 1.5,
@@ -111,15 +121,17 @@ export function TrajectoryMap({
   const positions = points.map((p) => [p.lat, p.lng]) as [number, number][]
   const center = positions[Math.floor(positions.length / 2)] ?? [17.385, 78.4867]
   const selected = selectedIndex != null ? points[selectedIndex] : null
+  const { theme } = useTheme()
+  const palette = useMapPalette()
 
   return (
     <div style={{ height }} className="overflow-hidden rounded-lg border border-border-soft">
-      <MapContainer center={center} zoom={12} style={{ height: '100%', width: '100%' }}>
-        <TileLayer className="map-tiles-dark" attribution={TILE_ATTRIBUTION} url={TILE_URL} />
-        <Polyline positions={positions} pathOptions={{ color: TEAL, weight: 3, opacity: 0.85 }} />
+      <MapContainer key={theme} center={center} zoom={12} style={{ height: '100%', width: '100%' }}>
+        <TileLayer className={theme === 'dark' ? 'map-tiles-dark' : ''} attribution={TILE_ATTRIBUTION} url={TILE_URL} />
+        <Polyline positions={positions} pathOptions={{ color: palette.primary, weight: 3, opacity: 0.85 }} />
         {points.map((p, i) => {
           const isSelected = i === selectedIndex
-          const color = p.isAnomaly ? CRIMSON : isSelected ? BRASS : TEAL_BRIGHT
+          const color = p.isAnomaly ? palette.critical : isSelected ? palette.secondary : palette.primaryBright
           const key = `${p.cameraId}-${p.timestamp}`
           const arrowIcon = makeArrowIcon(p.direction, color)
 
@@ -153,6 +165,7 @@ export function TrajectoryMap({
 /** Heatmap layer — renders inside a MapContainer, syncs with the Leaflet map instance */
 function HeatLayer({ points }: { points: HeatmapPoint[] }) {
   const map = useMap()
+  const palette = useMapPalette()
 
   useEffect(() => {
     if (points.length === 0) return
@@ -167,15 +180,15 @@ function HeatLayer({ points }: { points: HeatmapPoint[] }) {
         0.2: '#1a1a2e',
         0.4: '#16213e',
         0.6: '#0f3460',
-        0.8: BRASS,
-        1.0: CRIMSON,
+        0.8: palette.secondary,
+        1.0: palette.critical,
       },
     })
     layer.addTo(map)
     return () => {
       map.removeLayer(layer)
     }
-  }, [points, map])
+  }, [points, map, palette])
 
   return null
 }
@@ -195,10 +208,12 @@ export function HeatmapMap({
     ]
   }, [points])
 
+  const { theme } = useTheme()
+
   return (
     <div style={{ height }} className="overflow-hidden rounded-lg border border-border-soft">
-      <MapContainer center={center} zoom={12} style={{ height: '100%', width: '100%' }}>
-        <TileLayer className="map-tiles-dark" attribution={TILE_ATTRIBUTION} url={TILE_URL} />
+      <MapContainer key={theme} center={center} zoom={12} style={{ height: '100%', width: '100%' }}>
+        <TileLayer className={theme === 'dark' ? 'map-tiles-dark' : ''} attribution={TILE_ATTRIBUTION} url={TILE_URL} />
         <HeatLayer points={points} />
       </MapContainer>
     </div>
