@@ -1,7 +1,8 @@
 package com.amigos.backend.detection;
 
+import com.amigos.backend.auth.JwtTokenProvider;
 import com.amigos.backend.detection.dto.DetectionEventRequest;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -26,10 +27,13 @@ class DetectionIngestionControllerTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private ObjectMapper objectMapper;
+    private JsonMapper objectMapper;
 
     @MockitoBean
     private DetectionIngestionService ingestionService;
+
+    @MockitoBean
+    private JwtTokenProvider jwtTokenProvider; // satisfies JwtAuthFilter's constructor dependency
 
     @Test
     void ingestOne_acceptsValidDetectionEvent() throws Exception {

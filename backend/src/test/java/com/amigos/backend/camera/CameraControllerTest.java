@@ -1,7 +1,8 @@
 package com.amigos.backend.camera;
 
+import com.amigos.backend.auth.JwtTokenProvider;
 import com.amigos.backend.camera.dto.CameraResponse;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -24,10 +25,13 @@ class CameraControllerTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private ObjectMapper objectMapper;
+    private JsonMapper objectMapper;
 
     @MockitoBean
     private CameraService cameraService;
+
+    @MockitoBean
+    private JwtTokenProvider jwtTokenProvider; // satisfies JwtAuthFilter's constructor dependency
 
     @Test
     void getOne_returnsCameraJson() throws Exception {
