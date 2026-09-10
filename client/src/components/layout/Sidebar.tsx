@@ -8,17 +8,12 @@ import {
   BarChart3,
   UploadCloud,
   ShieldAlert,
-  Users,
   Radio,
   Sun,
   Moon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-<<<<<<< HEAD
-import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
-=======
->>>>>>> 97032abc31f8215de9075a4d33743a9078779037
 import { SystemStatusBadge } from '@/components/ui/Badge'
 import { camerasApi } from '@/lib/api/java'
 import type { SystemStatus } from '@/types'
@@ -59,11 +54,7 @@ const GROUPS: NavGroup[] = [
 ]
 
 export function Sidebar() {
-<<<<<<< HEAD
-  const { role } = useAuth()
   const { theme, toggleTheme } = useTheme()
-=======
->>>>>>> 97032abc31f8215de9075a4d33743a9078779037
   const [systemStatus, setSystemStatus] = useState<SystemStatus>('OPERATIONAL')
 
   // useQuery — reads from shared 'cameras' cache, no extra fetch if Dashboard loaded first

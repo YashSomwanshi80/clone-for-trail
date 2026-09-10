@@ -127,11 +127,11 @@ export const odFlow: ODFlowEntry[] = [
 ]
 
 export const users: User[] = [
-  { id: 'U-1', userId: 'ops.singh', displayName: 'A. Singh', role: 'ADMIN', status: 'ACTIVE', lastActive: minutesAgoIso(4) },
-  { id: 'U-2', userId: 'insp.rao', displayName: 'P. Rao', role: 'OPERATOR', status: 'ACTIVE', lastActive: minutesAgoIso(19) },
-  { id: 'U-3', userId: 'insp.mehta', displayName: 'S. Mehta', role: 'OPERATOR', status: 'ACTIVE', lastActive: minutesAgoIso(63) },
-  { id: 'U-4', userId: 'viewer.kumar', displayName: 'R. Kumar', role: 'VIEWER', status: 'ACTIVE', lastActive: minutesAgoIso(240) },
-  { id: 'U-5', userId: 'contractor.lee', displayName: 'J. Lee', role: 'VIEWER', status: 'DISABLED', lastActive: daysAgoIso(30) },
+  { id: 'U-1', userId: 'ops.singh', displayName: 'A. Singh', status: 'ACTIVE', lastActive: minutesAgoIso(4) },
+  { id: 'U-2', userId: 'insp.rao', displayName: 'P. Rao', status: 'ACTIVE', lastActive: minutesAgoIso(19) },
+  { id: 'U-3', userId: 'insp.mehta', displayName: 'S. Mehta', status: 'ACTIVE', lastActive: minutesAgoIso(63) },
+  { id: 'U-4', userId: 'viewer.kumar', displayName: 'R. Kumar', status: 'ACTIVE', lastActive: minutesAgoIso(240) },
+  { id: 'U-5', userId: 'contractor.lee', displayName: 'J. Lee', status: 'DISABLED', lastActive: daysAgoIso(30) },
 ]
 
 export const mediaHistory: MediaJob[] = [

@@ -1,10 +1,8 @@
 import { useNavigate } from 'react-router-dom'
-import { Bell, LogOut, User, Wifi, WifiOff } from 'lucide-react'
+import { Bell, Wifi, WifiOff } from 'lucide-react'
 import { SearchInput } from '@/components/ui/Input'
 import { Badge } from '@/components/ui/Badge'
-import { Dropdown } from '@/components/ui/Dropdown'
 import { IconButton } from '@/components/ui/Button'
-import { useAuth } from '@/context/AuthContext'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 
@@ -17,7 +15,6 @@ export function Header({
   wsStatus?: 'CONNECTING' | 'OPEN' | 'CLOSED' | 'RECONNECTING'
   alertCount?: number
 }) {
-  const { userId, logout } = useAuth()
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
 
@@ -66,21 +63,6 @@ export function Header({
             </span>
           )}
         </div>
-
-        <Dropdown
-          align="end"
-          trigger={
-            <button className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-raised">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-raised text-text-secondary">
-                <User className="h-3.5 w-3.5" />
-              </div>
-              <div className="hidden sm:block text-left">
-                <p className="text-[12px] leading-tight text-text-primary">{userId}</p>
-              </div>
-            </button>
-          }
-          items={[{ label: 'Log out', icon: <LogOut className="h-3.5 w-3.5" />, onSelect: () => void logout(), danger: true }]}
-        />
       </div>
     </header>
   )

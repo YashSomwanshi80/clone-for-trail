@@ -1,4 +1,3 @@
-import { clearSession, getAccessToken } from '@/lib/auth-store'
 
 export const JAVA_BASE_URL = import.meta.env.VITE_JAVA_API_BASE_URL ?? 'http://localhost:8080'
 export const PYTHON_BASE_URL = import.meta.env.VITE_PYTHON_API_BASE_URL ?? 'http://localhost:8000'
@@ -17,22 +16,13 @@ interface RequestOptions extends RequestInit {
 }
 
 async function request<T>(baseUrl: string, path: string, options: RequestOptions = {}): Promise<T> {
-  const { auth = true, headers, ...rest } = options
+  const { headers, ...rest } = options
   const finalHeaders: Record<string, string> = {
     ...(headers as Record<string, string> | undefined),
-  }
-  if (auth) {
-    const token = getAccessToken()
-    if (token) finalHeaders.Authorization = `Bearer ${token}`
   }
 
   const res = await fetch(`${baseUrl}${path}`, { ...rest, headers: finalHeaders })
   if (!res.ok) {
-    // 401 Unauthorized → session is invalid/expired — clear it immediately so the
-    // app's auth guard redirects to login reactively rather than showing a generic error.
-    if (res.status === 401 && auth) {
-      clearSession()
-    }
     let message = `Request failed (${res.status})`
     try {
       const body = await res.json()

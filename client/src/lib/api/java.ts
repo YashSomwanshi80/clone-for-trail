@@ -1,48 +1,6 @@
 import { javaDelete, javaGet, javaPost, javaPut, mockDelay, USE_MOCKS } from './http'
-import type { Alert, AnalyticsSnapshot, BlacklistEntry, Camera, CameraHealth, HeatmapPoint, MediaJob, ODFlowEntry, Trajectory, User } from '@/types'
-import { alerts as seedAlerts, seedCameras, seedBlacklist, seedUsers, seedMedia, generateTrajectory, generateAnalyticsHistory, generateHeatmapData, odFlow as seedOdFlow } from '@/mocks/store'
-
-export const authApi = {
-  async login(userId: string, password: string) {
-    if (USE_MOCKS) {
-      if (!userId || !password) throw new Error('User ID and password are required')
-      const match = seedUsers.find((u) => u.userId === userId) ?? seedUsers[0]
-      return mockDelay({
-        accessToken: `mock-access-${Date.now()}`,
-        refreshToken: `mock-refresh-${Date.now()}`,
-        expiresAt: Date.now() + 15 * 60 * 1000,
-        userId: match.userId,
-      })
-    }
-    return javaPost<{ accessToken: string; refreshToken: string; expiresAt: number; userId: string }>(
-      '/api/v1/auth/login',
-      { userId, password },
-      { auth: false }
-    )
-  },
-  async refresh(refreshToken: string) {
-    if (USE_MOCKS) {
-      return mockDelay(
-        {
-          accessToken: `mock-access-${Date.now()}`,
-          refreshToken,
-          expiresAt: Date.now() + 15 * 60 * 1000,
-          userId: 'ops.singh',
-        },
-        150
-      )
-    }
-    return javaPost<{ accessToken: string; refreshToken: string; expiresAt: number; userId: string }>(
-      '/api/v1/auth/refresh',
-      { refreshToken },
-      { auth: false }
-    )
-  },
-  async logout() {
-    if (USE_MOCKS) return mockDelay(undefined, 100)
-    return javaPost<void>('/api/v1/auth/logout')
-  },
-}
+import type { Alert, AnalyticsSnapshot, BlacklistEntry, Camera, CameraHealth, HeatmapPoint, MediaJob, ODFlowEntry, Trajectory } from '@/types'
+import { alerts as seedAlerts, seedCameras, seedBlacklist, seedMedia, generateTrajectory, generateAnalyticsHistory, generateHeatmapData, odFlow as seedOdFlow } from '@/mocks/store'
 
 export const camerasApi = {
   async list() {
