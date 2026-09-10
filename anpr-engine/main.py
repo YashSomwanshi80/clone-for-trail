@@ -1,14 +1,22 @@
+import os
+
 from fastapi import FastAPI
 
-# Create the FastAPI instance
-app = FastAPI()
+from config import settings
+from routers import health, infer, media
 
-# Define a route for the root URL
-@app.get("/")
-def read_root():
-    return {"message": "Welcome to my FastAPI app!"}
+os.makedirs(settings.crop_dir, exist_ok=True)
+os.makedirs("data", exist_ok=True)
 
-# Define a route with a path parameter (item_id) and an optional query parameter (q)
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: str | None = None):
-    return {"item_id": item_id, "q": q}
+app = FastAPI(
+    title="ANPR Inference Service",
+    version="2.0.0",
+    description=(
+        "Stateless detection+OCR service — turns raw image/video bytes into "
+        "structured plate-detection results and forwards them to the Java backend."
+    ),
+)
+
+app.include_router(health.router)
+app.include_router(infer.router)
+app.include_router(media.router)

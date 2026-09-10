@@ -1,10 +1,7 @@
-export type Role = 'ADMIN' | 'OPERATOR' | 'VIEWER'
-
 export interface User {
   id: string
   userId: string
   displayName: string
-  role: Role
   status: 'ACTIVE' | 'DISABLED'
   lastActive: string
 }

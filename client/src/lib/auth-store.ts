@@ -1,19 +1,16 @@
-import type { Role } from '@/types'
-
-// Per A7: access token is kept in memory only, never in localStorage.
-// A page refresh in this demo build will require re-login — acceptable
-// for local/demo use, called out explicitly rather than silently
-// "solved" with an insecure persistence shortcut.
-
 interface Session {
   accessToken: string
   refreshToken: string
   expiresAt: number
   userId: string
-  role: Role
 }
 
-let session: Session | null = null
+let session: Session | null = {
+  accessToken: 'dummy-token',
+  refreshToken: 'dummy-refresh',
+  expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 365,
+  userId: 'admin'
+}
 let refreshTimer: ReturnType<typeof setTimeout> | null = null
 const listeners = new Set<() => void>()
 

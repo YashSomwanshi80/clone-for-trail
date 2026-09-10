@@ -17,7 +17,7 @@ export function Header({
   wsStatus?: 'CONNECTING' | 'OPEN' | 'CLOSED' | 'RECONNECTING'
   alertCount?: number
 }) {
-  const { userId, role, logout } = useAuth()
+  const { userId, logout } = useAuth()
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
 
@@ -76,7 +76,6 @@ export function Header({
               </div>
               <div className="hidden sm:block text-left">
                 <p className="text-[12px] leading-tight text-text-primary">{userId}</p>
-                <p className="text-[10px] leading-tight text-text-tertiary">{role}</p>
               </div>
             </button>
           }
