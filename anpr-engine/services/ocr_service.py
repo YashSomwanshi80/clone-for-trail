@@ -16,10 +16,10 @@ class PlateOCR:
         self.recognizer = LicensePlateRecognizer(settings.ocr_model_name)
 
     def read_plate(self, plate_crop: np.ndarray) -> tuple[str, float]:
-        # fast-plate-ocr expects RGB, channels_last, uint8 — OpenCV crops are BGR
-        rgb = cv2.cvtColor(plate_crop, cv2.COLOR_BGR2RGB) if plate_crop.ndim == 3 else plate_crop
+        # Model input: [batch, 70, 140, 1] uint8 grayscale — convert BGR→gray
+        gray = cv2.cvtColor(plate_crop, cv2.COLOR_BGR2GRAY) if plate_crop.ndim == 3 else plate_crop
 
-        preds = self.recognizer.run(rgb, return_confidence=True)
+        preds = self.recognizer.run(gray, return_confidence=True)
         if not preds:
             return "", 0.0
 
