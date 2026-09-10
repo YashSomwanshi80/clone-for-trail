@@ -9,6 +9,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 
 @Configuration
 @EnableWebSecurity
@@ -24,16 +25,20 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
+        requestHandler.setCsrfRequestAttributeName(null); // forces the deferred token to be loaded eagerly
+
         http
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                .ignoringRequestMatchers("/api/internal/**") // internal service calls use API key, not CSRF
+                .csrfTokenRequestHandler(requestHandler)
+                .ignoringRequestMatchers("/api/internal/**", "/api/v1/auth/**")
             )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                .requestMatchers("/ws/**").permitAll() // WS handshake auth is a separate concern, not covered yet
-                .requestMatchers("/api/internal/**").permitAll() // InternalApiKeyFilter guards this instead
+                .requestMatchers("/ws/**").permitAll()
+                .requestMatchers("/api/internal/**").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(internalApiKeyFilter, UsernamePasswordAuthenticationFilter.class)
