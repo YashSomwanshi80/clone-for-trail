@@ -1,12 +1,9 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { authApi } from '@/lib/api/java'
 import { clearSession, getSession, isAuthenticated, setSession, subscribeAuth } from '@/lib/auth-store'
-import type { Role } from '@/types'
-
 interface AuthContextValue {
   authenticated: boolean
   userId: string | null
-  role: Role | null
   login: (userId: string, password: string) => Promise<void>
   logout: () => Promise<void>
 }
@@ -40,7 +37,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         authenticated: isAuthenticated(),
         userId: session?.userId ?? null,
-        role: session?.role ?? null,
         login,
         logout,
       }}

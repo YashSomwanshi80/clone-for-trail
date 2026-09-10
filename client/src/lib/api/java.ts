@@ -1,5 +1,5 @@
 import { javaDelete, javaGet, javaPost, javaPut, mockDelay, USE_MOCKS } from './http'
-import type { Alert, AnalyticsSnapshot, BlacklistEntry, Camera, CameraHealth, HeatmapPoint, MediaJob, ODFlowEntry, Role, Trajectory, User } from '@/types'
+import type { Alert, AnalyticsSnapshot, BlacklistEntry, Camera, CameraHealth, HeatmapPoint, MediaJob, ODFlowEntry, Trajectory, User } from '@/types'
 import { alerts as seedAlerts, seedCameras, seedBlacklist, seedUsers, seedMedia, generateTrajectory, generateAnalyticsHistory, generateHeatmapData, odFlow as seedOdFlow } from '@/mocks/store'
 
 export const authApi = {
@@ -12,10 +12,9 @@ export const authApi = {
         refreshToken: `mock-refresh-${Date.now()}`,
         expiresAt: Date.now() + 15 * 60 * 1000,
         userId: match.userId,
-        role: match.role as Role,
       })
     }
-    return javaPost<{ accessToken: string; refreshToken: string; expiresAt: number; userId: string; role: Role }>(
+    return javaPost<{ accessToken: string; refreshToken: string; expiresAt: number; userId: string }>(
       '/api/v1/auth/login',
       { userId, password },
       { auth: false }
@@ -29,12 +28,11 @@ export const authApi = {
           refreshToken,
           expiresAt: Date.now() + 15 * 60 * 1000,
           userId: 'ops.singh',
-          role: 'ADMIN' as Role,
         },
         150
       )
     }
-    return javaPost<{ accessToken: string; refreshToken: string; expiresAt: number; userId: string; role: Role }>(
+    return javaPost<{ accessToken: string; refreshToken: string; expiresAt: number; userId: string }>(
       '/api/v1/auth/refresh',
       { refreshToken },
       { auth: false }
@@ -165,42 +163,3 @@ export const analyticsApi = {
   },
 }
 
-export const usersApi = {
-  async list() {
-    if (USE_MOCKS) return mockDelay(seedUsers)
-    return javaGet<User[]>('/api/v1/users')
-  },
-  async create(user: { userId: string; displayName: string; role: Role; status: 'ACTIVE' | 'DISABLED' }) {
-    if (USE_MOCKS) {
-      const newUser: User = {
-        id: `U-${seedUsers.length + 1}`,
-        userId: user.userId,
-        displayName: user.displayName,
-        role: user.role,
-        status: user.status,
-        lastActive: new Date().toISOString()
-      }
-      seedUsers.push(newUser)
-      return mockDelay(newUser, 300)
-    }
-    return javaPost<User>('/api/v1/users', user)
-  },
-  async updateRole(id: string, role: Role) {
-    if (USE_MOCKS) {
-      const found = seedUsers.find((u) => u.id === id)
-      if (!found) throw new Error('User not found')
-      found.role = role
-      return mockDelay(found, 200)
-    }
-    return javaPut<User>(`/api/v1/users/${id}/role`, { role })
-  },
-  async setStatus(id: string, status: 'ACTIVE' | 'DISABLED') {
-    if (USE_MOCKS) {
-      const found = seedUsers.find((u) => u.id === id)
-      if (!found) throw new Error('User not found')
-      found.status = status
-      return mockDelay(found, 200)
-    }
-    return javaPut<User>(`/api/v1/users/${id}/status`, { status })
-  },
-}

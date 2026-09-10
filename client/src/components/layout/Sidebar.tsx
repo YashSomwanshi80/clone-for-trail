@@ -12,7 +12,6 @@ import {
   Radio,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useAuth } from '@/context/AuthContext'
 import { SystemStatusBadge } from '@/components/ui/Badge'
 import { camerasApi } from '@/lib/api/java'
 import type { SystemStatus } from '@/types'
@@ -21,8 +20,6 @@ interface NavItem {
   to: string
   label: string
   icon: typeof LayoutDashboard
-  adminOnly?: boolean
-  requiresOperator?: boolean
 }
 
 interface NavGroup {
@@ -41,7 +38,7 @@ const GROUPS: NavGroup[] = [
   {
     label: 'Intelligence',
     items: [
-      { to: '/trajectory', label: 'Trajectory Viewer', icon: RouteIcon, requiresOperator: true },
+      { to: '/trajectory', label: 'Trajectory Viewer', icon: RouteIcon },
       { to: '/alerts', label: 'Alert Console', icon: Bell },
     ],
   },
@@ -49,17 +46,12 @@ const GROUPS: NavGroup[] = [
     label: 'Operations',
     items: [
       { to: '/upload', label: 'Upload & Test', icon: UploadCloud },
-      { to: '/blacklist', label: 'Blacklist', icon: ShieldAlert, requiresOperator: true },
+      { to: '/blacklist', label: 'Blacklist', icon: ShieldAlert },
     ],
-  },
-  {
-    label: 'Admin',
-    items: [{ to: '/admin', label: 'User / Role Admin', icon: Users, adminOnly: true }],
   },
 ]
 
 export function Sidebar() {
-  const { role } = useAuth()
   const [systemStatus, setSystemStatus] = useState<SystemStatus>('OPERATIONAL')
 
   // useQuery — reads from shared 'cameras' cache, no extra fetch if Dashboard loaded first
@@ -87,11 +79,7 @@ export function Sidebar() {
 
       <nav className="flex-1 overflow-y-auto px-2 py-2 scrollbar-thin">
         {GROUPS.map((group) => {
-          const visibleItems = group.items.filter((item) => {
-            if (item.adminOnly && role !== 'ADMIN') return false
-            if (item.requiresOperator && role === 'VIEWER') return false
-            return true
-          })
+          const visibleItems = group.items
           if (visibleItems.length === 0) return null
           return (
             <div key={group.label} className="mb-3">
