@@ -19,12 +19,15 @@ class Settings(BaseSettings):
     java_base_url: str = "http://localhost:8080"
     java_detections_endpoint: str = "/api/internal/v1/detections"
     java_detections_batch_endpoint: str = "/api/internal/v1/detections/batch"
-    java_camera_registry_endpoint: str = "/api/internal/v1/cameras"
+    # NOTE: there is no /api/internal/v1/cameras endpoint in Java.
+    # Camera data lives at /api/v1/cameras (JWT-authenticated, not internal-key).
     outbound_retry_attempts: int = 3
     outbound_timeout_seconds: float = 5.0
 
     # -- Security (shared API key, Section 3 of SRS) --
-    service_api_key: str = "change-me-local-dev-key"
+    # Must match anpr.internal-api-key in backend/src/main/resources/application.yaml.
+    # The .env file overrides this for prod; the default matches the dev application.yaml value.
+    service_api_key: str = "local-dev-internal-key-change-me"
 
     # -- Misc / audit info (Section 3, GET /model-info) --
     ocr_engine_version: str = "fast-plate-ocr-1.1.0"

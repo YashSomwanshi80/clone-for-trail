@@ -64,16 +64,17 @@ export function UploadPage() {
     setStep('registering')
     try {
       // Step 1 — Java registers media metadata, returns mediaId
+      // Payload matches Java's MediaRegisterRequest: { sourceType, cameraId, mediaType, capturedAt, cityId }
       const media = await mediaApi.create({
-        fileName: file.name,
         fileType: file.type.startsWith('video') ? 'VIDEO' : 'IMAGE',
         cameraId: mode === 'camera' ? cameraId : null,
-        manualGeoTag: mode === 'manual' ? { lat: parseFloat(manualLat), lng: parseFloat(manualLng) } : null,
       })
       setStep('inferring')
 
       // Step 2 — raw bytes sent directly to Python, never through Java
-      if (media.fileType === 'VIDEO') {
+      // Use the local file object for type detection — Java's MediaResponse
+      // returns `mediaType` (not `fileType`) but we already know it from the file.
+      if (file.type.startsWith('video')) {
         await inferenceApi.inferVideo(file, media.mediaId)
       } else {
         await inferenceApi.inferImage(file, media.mediaId)

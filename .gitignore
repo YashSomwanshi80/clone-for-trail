@@ -1,61 +1,95 @@
-# =========================
-# Operating System Files
-# =========================
+# =============================================================================
+# NeuraTransit — root .gitignore
+# =============================================================================
+
+# ---- Operating system -------------------------------------------------------
 .DS_Store
 Thumbs.db
+Desktop.ini
 
-# =========================
-# IDEs and Editors
-# =========================
+# ---- IDEs and editors -------------------------------------------------------
 .idea/
 .vscode/
 *.swp
+*.swo
 *.iml
 .project
 .classpath
 .settings/
 
-# =========================
-# Python (anpr-engine)
-# =========================
+# ---- Environment and secrets ------------------------------------------------
+# Never commit real secrets. .env.example files ARE committed (they have no values).
+.env
+.env.local
+.env.production
+.env.staging
+# Whitelist example files explicitly
+!.env.example
+!**/.env.example
+
+# application.yaml holds DB passwords and JWT secrets — never commit it.
+# application.yaml.example IS committed (it has placeholder values).
+**/application.yaml
+!**/application.yaml.example
+
+# ---- Python (anpr-engine) ---------------------------------------------------
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyo
 venv/
 .venv/
 env/
 .pytest_cache/
+*.egg-info/
+dist/
+build/
+.mypy_cache/
+.ruff_cache/
 
-# =========================
-# Java & Maven (backend)
-# =========================
-target/
+# ANPR runtime data (crops, temp video files) — can be large and regenerated
+anpr-engine/data/
+
+# ---- Java & Maven (backend) -------------------------------------------------
+backend/target/
 *.class
 *.jar
+!**/wrapper/*.jar      # keep maven-wrapper.jar
 *.war
+*.ear
 *.log
-### If you don't want to upload the downloaded maven wrapper jar:
-# .mvn/wrapper/maven-wrapper.jar
+hs_err_pid*.log
 
-# =========================
-# Node.js & React Vite (client)
-# =========================
-node_modules/
-dist/
-dist-ssr/
+# ---- Node.js & Vite (client) ------------------------------------------------
+client/node_modules/
+client/dist/
+client/dist-ssr/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+.eslintcache
+*.tsbuildinfo
 
-# =========================
-# Environment Variables (Global)
-# =========================
-.env
-.env.*
-!.env.example
+# ---- Kafka (binary distribution — keep everything except runtime state) -----
+# kafka/ is the broker installation itself — scripts, config, and README are committed.
+# Only ignore directories that are written at runtime:
+kafka/logs/
+kafka/data/
+kafka/bin/
+kafka/libs/
+kafka/licenses/
+kafka/site-docs/
+kafka/config/
+kafka/cookies.txt
+kafka/LICENSE
+kafka/NOTICE
 
-# =========================
-# Kafka
-# =========================
-kafka/
+
+# Explicitly whitelist committed kafka files so no broad pattern above can swallow them.
+# (*.log on line ~60 would not match .sh/.ps1/.md, but be explicit for safety.)
+
+# ---- Misc -------------------------------------------------------------------
+*.bak
+*.tmp
+*.orig

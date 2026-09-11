@@ -34,10 +34,13 @@ export function AnalyticsPage() {
   const { history, status } = useAnalyticsLive(initial)
 
   const fetchData = useCallback(async () => {
+    // Java analytics endpoints accept cityId, not a zone name.
+    // 'all' zones → use 'default' cityId (the only seeded city in dev).
+    const cityId = zone === 'all' ? 'default' : zone
     const [hist, od, heat] = await Promise.all([
-      analyticsApi.history(range, zone),
-      analyticsApi.odFlow(range, zone),
-      analyticsApi.heatmap(range),
+      analyticsApi.history(range, cityId),
+      analyticsApi.odFlow(range, cityId),
+      analyticsApi.heatmap(range, cityId),
     ])
     setInitial(hist)
     setOdFlowData(od)

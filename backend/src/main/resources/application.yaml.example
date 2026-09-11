@@ -1,0 +1,73 @@
+# ============================================================
+# NeuraTransit — Java Backend Configuration
+# Copy this file to application.yaml and fill in your values.
+# application.yaml is gitignored; application.yaml.example is committed.
+# ============================================================
+
+spring:
+  application:
+    name: backend
+
+  # ------ PostgreSQL -------------------------------------------
+  datasource:
+    # Format: jdbc:postgresql://<host>:<port>/<database>
+    url: jdbc:postgresql://localhost:5432/neuratransit
+    username: neura_user
+    password: CHANGE_ME          # ← change in production
+    driver-class-name: org.postgresql.Driver
+
+  # ------ JPA / Hibernate --------------------------------------
+  jpa:
+    hibernate:
+      # "validate" in production (Flyway manages schema).
+      # "create-drop" only for isolated unit tests.
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  # ------ Flyway (DB migrations) --------------------------------
+  flyway:
+    locations: classpath:db/migration
+    # baseline-on-migrate: true   # uncomment if migrating an existing DB
+
+  # ------ Redis (refresh-token blacklist) -----------------------
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      # password: CHANGE_ME      # uncomment if Redis requires auth
+      # ssl.enabled: true        # uncomment for TLS
+
+  # ------ Kafka ------------------------------------------------
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: anpr-backend
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.amigos.backend.*"
+
+# ------ HTTP server -------------------------------------------
+server:
+  port: 8080
+
+# ------ Application-specific ----------------------------------
+anpr:
+  # Shared secret — Python sends this as X-Internal-Api-Key on /api/internal/* calls.
+  # Must EXACTLY match SERVICE_API_KEY in anpr-engine/.env.
+  internal-api-key: "local-dev-internal-key-change-me"   # ← change in production
+
+  # JWT signing secret — must be at least 32 bytes (256 bits) for HS256.
+  # Generate a strong random value: openssl rand -hex 32
+  jwt-secret: "CHANGE_THIS_TO_A_LONG_RANDOM_SECRET_AT_LEAST_32_BYTES"
+
+  # Access token lifetime in milliseconds.
+  jwt-expiration-ms: 3600000          # 1 hour
+
+  # Refresh token lifetime in days.
+  refresh-token-expiration-days: 7

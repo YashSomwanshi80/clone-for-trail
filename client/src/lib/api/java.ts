@@ -1,7 +1,40 @@
-import { javaDelete, javaGet, javaPost, javaPut, mockDelay, USE_MOCKS } from './http'
-import type { Alert, AnalyticsSnapshot, BlacklistEntry, Camera, CameraHealth, HeatmapPoint, MediaJob, ODFlowEntry, Trajectory } from '@/types'
+import { javaDelete, javaGet, javaPost, javaPost_noAuth, javaPut, mockDelay, setAccessToken, USE_MOCKS, DEFAULT_CITY_ID, prefetchCsrf } from './http'
+import type { Alert, AnalyticsSnapshot, BlacklistEntry, Camera, CameraHealth, CongestionResponse, HeatmapPoint, HeatmapResponse, MediaJob, ODFlowEntry, OdMatrixResponse, Trajectory } from '@/types'
 import { alerts as seedAlerts, seedCameras, seedBlacklist, seedMedia, generateTrajectory, generateAnalyticsHistory, generateHeatmapData, odFlow as seedOdFlow } from '@/mocks/store'
 
+// ---------------------------------------------------------------------------
+// Auth
+// ---------------------------------------------------------------------------
+// /api/v1/auth/** — no JWT, no CSRF (both exempted in SecurityConfig).
+export const authApi = {
+  async login(username: string, password: string) {
+    const res = await javaPost_noAuth<{ accessToken: string; refreshToken: string; tokenType: string }>(
+      '/api/v1/auth/login',
+      { username, password },
+    )
+    setAccessToken(res.accessToken)
+    // Warm up the XSRF-TOKEN cookie immediately — see prefetchCsrf() in http.ts.
+    void prefetchCsrf()
+    return res
+  },
+  async refresh(refreshToken: string) {
+    const res = await javaPost_noAuth<{ accessToken: string; refreshToken: string; tokenType: string }>(
+      '/api/v1/auth/refresh',
+      { refreshToken },
+    )
+    setAccessToken(res.accessToken)
+    void prefetchCsrf()
+    return res
+  },
+  async logout(refreshToken: string) {
+    setAccessToken(null)
+    return javaPost_noAuth<void>('/api/v1/auth/logout', { refreshToken })
+  },
+}
+
+// ---------------------------------------------------------------------------
+// Cameras
+// ---------------------------------------------------------------------------
 export const camerasApi = {
   async list() {
     if (USE_MOCKS) return mockDelay(seedCameras)
@@ -24,16 +57,31 @@ export const camerasApi = {
   },
 }
 
+// ---------------------------------------------------------------------------
+// Trajectory
+// ---------------------------------------------------------------------------
+// Java's TrajectoryController.getTrajectory() requires both `from` and `to`
+// as mandatory @RequestParam Instant values — without them Spring returns 400.
+// Previously the client called the endpoint with no params at all.
 export const trajectoryApi = {
-  async search(plateNumber: string) {
+  async search(plateNumber: string, from?: string, to?: string) {
     if (USE_MOCKS) {
       if (!plateNumber.trim()) throw new Error('Enter a plate number to search')
       return mockDelay(generateTrajectory(plateNumber.toUpperCase()), 600)
     }
-    return javaGet<Trajectory>(`/api/v1/trajectories/${encodeURIComponent(plateNumber)}`)
+    const now = new Date().toISOString()
+    const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+    const fromTs = from ?? dayAgo
+    const toTs = to ?? now
+    return javaGet<Trajectory>(
+      `/api/v1/trajectories/${encodeURIComponent(plateNumber)}?from=${encodeURIComponent(fromTs)}&to=${encodeURIComponent(toTs)}`,
+    )
   },
 }
 
+// ---------------------------------------------------------------------------
+// Alerts
+// ---------------------------------------------------------------------------
 export const alertsApi = {
   async list() {
     if (USE_MOCKS) return mockDelay(seedAlerts)
@@ -49,6 +97,9 @@ export const alertsApi = {
   },
 }
 
+// ---------------------------------------------------------------------------
+// Blacklist
+// ---------------------------------------------------------------------------
 export const blacklistApi = {
   async list() {
     if (USE_MOCKS) return mockDelay(seedBlacklist)
@@ -71,15 +122,27 @@ export const blacklistApi = {
   },
 }
 
+// ---------------------------------------------------------------------------
+// Media
+// ---------------------------------------------------------------------------
+// BUG FIX: previous payload sent { fileName, fileType, cameraId, manualGeoTag }
+// which does NOT match Java's MediaRegisterRequest record:
+//   { sourceType, cameraId, mediaType, capturedAt, cityId }
+// Fields renamed and mapped to their correct Java names.
+// `cityId` defaults to "default" for the manual-upload portal flow.
 export const mediaApi = {
-  async create(payload: { fileName: string; fileType: 'IMAGE' | 'VIDEO'; cameraId: string | null; manualGeoTag: { lat: number; lng: number } | null }) {
+  async create(payload: {
+    fileType: 'IMAGE' | 'VIDEO'
+    cameraId: string | null
+    cityId?: string
+  }) {
     if (USE_MOCKS) {
       const job: MediaJob = {
         mediaId: `MED-${Math.floor(1000 + Math.random() * 9000)}`,
         sourceType: 'MANUAL_UPLOAD',
         cameraId: payload.cameraId,
-        manualGeoTag: payload.manualGeoTag,
-        fileName: payload.fileName,
+        manualGeoTag: null,
+        fileName: '',
         fileType: payload.fileType,
         status: 'PENDING',
         createdAt: new Date().toISOString(),
@@ -87,7 +150,18 @@ export const mediaApi = {
       seedMedia.unshift(job)
       return mockDelay(job, 350)
     }
-    return javaPost<MediaJob>('/api/v1/media', payload)
+    return javaPost<MediaJob>('/api/v1/media', {
+      // Java: @NotNull Media.SourceType sourceType
+      sourceType: 'MANUAL_UPLOAD',
+      // Java: String cameraId  (nullable)
+      cameraId: payload.cameraId ?? null,
+      // Java: @NotNull Media.MediaType mediaType
+      mediaType: payload.fileType,    // 'IMAGE' | 'VIDEO' — enums match exactly
+      // Java: @NotNull Instant capturedAt
+      capturedAt: new Date().toISOString(),
+      // Java: @NotNull String cityId
+      cityId: payload.cityId ?? DEFAULT_CITY_ID,
+    })
   },
   async get(mediaId: string) {
     if (USE_MOCKS) {
@@ -99,25 +173,70 @@ export const mediaApi = {
   },
   async listUploads() {
     if (USE_MOCKS) return mockDelay(seedMedia.filter((m) => m.sourceType === 'MANUAL_UPLOAD'))
+    // Java's MediaController.listManualUploads() ignores the sourceType param and
+    // always returns MANUAL_UPLOAD records — the query param is accepted but unused.
     return javaGet<MediaJob[]>('/api/v1/media?sourceType=MANUAL_UPLOAD')
   },
 }
 
+// ---------------------------------------------------------------------------
+// Analytics
+// ---------------------------------------------------------------------------
+// Every function fetches the real Java DTO, then maps it to the shape the
+// UI/charts expect at the API boundary — no conversion scattered in components.
+//
+// Real Java endpoints + response types:
+//   GET /api/v1/analytics/heatmap?cityId=   → HeatmapResponse { cityId, cells: {lat,lng,count}[] }
+//   GET /api/v1/analytics/od-matrix?cityId= → OdMatrixResponse { cityId, pairs: {fromCameraId,toCameraId,count}[] }
+//   GET /api/v1/analytics/congestion?cityId=→ CongestionResponse { cityId, zones: {gridCell,density,level}[] }
 export const analyticsApi = {
-  async history(range = '6h', zone = 'all') {
+  /**
+   * Returns AnalyticsSnapshot[] for the trend charts.
+   * Java has no time-series /history endpoint — congestion zones are used as a
+   * proxy: each zone becomes one data point stamped with "now".
+   * (The charts get live rolling data from the WebSocket; this REST call just
+   *  seeds the initial window.)
+   */
+  async history(range = '6h', cityId = DEFAULT_CITY_ID): Promise<AnalyticsSnapshot[]> {
     if (USE_MOCKS) return mockDelay(generateAnalyticsHistory(range === '1h' ? 12 : range === '24h' ? 48 : range === '7d' ? 96 : 24))
-    return javaGet<AnalyticsSnapshot[]>(`/api/v1/analytics/history?range=${range}&zone=${encodeURIComponent(zone)}`)
+    const res = await javaGet<CongestionResponse>(
+      `/api/v1/analytics/congestion?cityId=${encodeURIComponent(cityId)}`,
+    )
+    // Map each congestion zone → one AnalyticsSnapshot data point
+    const now = new Date().toISOString()
+    return res.zones.map((z) => ({
+      timestamp: now,
+      volume: z.density,
+      avgSpeedKmh: 0,       // not available from this endpoint
+      congestionIndex: z.level === 'HIGH' ? 80 : z.level === 'MEDIUM' ? 50 : 20,
+    }))
   },
-  async odFlow(range = '6h', zone = 'all') {
+
+  /** Returns ODFlowEntry[] for the origin–destination bar chart. */
+  async odFlow(range = '6h', cityId = DEFAULT_CITY_ID): Promise<ODFlowEntry[]> {
     if (USE_MOCKS) {
+      const zone = cityId
       const filtered = zone === 'all' ? seedOdFlow : seedOdFlow.filter((e) => e.origin === zone || e.destination === zone)
       return mockDelay(filtered)
     }
-    return javaGet<ODFlowEntry[]>(`/api/v1/analytics/od-flow?range=${range}&zone=${encodeURIComponent(zone)}`)
+    const res = await javaGet<OdMatrixResponse>(
+      `/api/v1/analytics/od-matrix?cityId=${encodeURIComponent(cityId)}`,
+    )
+    // Map Java's {fromCameraId, toCameraId, count} → UI's {origin, destination, count}
+    return res.pairs.map((p) => ({
+      origin: p.fromCameraId,
+      destination: p.toCameraId,
+      count: Number(p.count),
+    }))
   },
-  async heatmap(range = '6h') {
+
+  /** Returns HeatmapPoint[] for the map component (uses `intensity`, not `count`). */
+  async heatmap(_range = '6h', cityId = DEFAULT_CITY_ID): Promise<HeatmapPoint[]> {
     if (USE_MOCKS) return mockDelay(generateHeatmapData())
-    return javaGet<HeatmapPoint[]>(`/api/v1/analytics/heatmap?range=${range}`)
+    const res = await javaGet<HeatmapResponse>(
+      `/api/v1/analytics/heatmap?cityId=${encodeURIComponent(cityId)}`,
+    )
+    // Map Java's `count` (long) → UI's `intensity` (number)
+    return res.cells.map((c) => ({ lat: c.lat, lng: c.lng, intensity: Number(c.count) }))
   },
 }
-
