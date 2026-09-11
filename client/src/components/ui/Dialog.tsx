@@ -25,15 +25,20 @@ export function Dialog({
   const panelRef = useRef<HTMLDivElement>(null)
   const previouslyFocused = useRef<HTMLElement | null>(null)
 
+  const onCloseRef = useRef(onClose)
+  useEffect(() => { onCloseRef.current = onClose }, [onClose])
+
   useEffect(() => {
     if (!open) return
     previouslyFocused.current = document.activeElement as HTMLElement
     const panel = panelRef.current
     const focusable = panel?.querySelector<HTMLElement>('button, input, select, textarea, [tabindex]')
-    focusable?.focus()
+    if (panel && !panel.contains(document.activeElement)) {
+      focusable?.focus()
+    }
 
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') onCloseRef.current()
       if (e.key === 'Tab' && panel) {
         const items = panel.querySelectorAll<HTMLElement>(
           'button, input, select, textarea, a[href], [tabindex]:not([tabindex="-1"])'
@@ -55,7 +60,7 @@ export function Dialog({
       document.removeEventListener('keydown', onKeyDown)
       previouslyFocused.current?.focus()
     }
-  }, [open, onClose])
+  }, [open])
 
   if (!open) return null
 

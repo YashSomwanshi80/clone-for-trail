@@ -13,6 +13,10 @@ if [ ! -f "$CONFIG" ]; then
   CONFIG="config/server.properties"
 fi
 
+
+echo "==> Cleaning up any zombie processes on port 9092..."
+fuser -k 9092/tcp 2>/dev/null || true
+
 echo "==> Starting Kafka broker (KRaft) — config: $CONFIG"
 echo "    Press Ctrl+C to stop."
 echo ""

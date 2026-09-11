@@ -34,6 +34,9 @@ public class User {
     )
     private Set<Role> roles = new HashSet<>();
 
+    @Column(name = "camera_id")
+    private String cameraId; // nullable — only set for node/camera-operator logins
+
     @Column(nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 }

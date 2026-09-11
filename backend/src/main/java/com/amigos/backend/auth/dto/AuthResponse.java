@@ -1,3 +1,3 @@
 package com.amigos.backend.auth.dto;
 
-public record AuthResponse(String accessToken, String refreshToken, String tokenType) {}
+public record AuthResponse(String accessToken, String refreshToken, String tokenType, String cameraId, String cityId) {}

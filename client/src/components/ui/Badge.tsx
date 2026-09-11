@@ -30,12 +30,14 @@ export function Badge({ tone = 'neutral', children, className }: { tone?: Tone; 
 
 const CAMERA_STATUS_MAP = {
   ONLINE: { tone: 'teal' as Tone, label: 'Online', Icon: Circle },
+  ACTIVE: { tone: 'teal' as Tone, label: 'Active', Icon: Circle },
+  INACTIVE: { tone: 'neutral' as Tone, label: 'Inactive', Icon: Circle },
   OFFLINE: { tone: 'neutral' as Tone, label: 'Offline', Icon: Circle },
   MAINTENANCE: { tone: 'warning' as Tone, label: 'Maintenance', Icon: Wrench },
 }
 
 export function CameraStatusBadge({ status }: { status: keyof typeof CAMERA_STATUS_MAP }) {
-  const { tone, label, Icon } = CAMERA_STATUS_MAP[status]
+  const { tone, label, Icon } = CAMERA_STATUS_MAP[status] || { tone: 'neutral', label: status, Icon: Circle }
   return (
     <Badge tone={tone}>
       <Icon className="h-2.5 w-2.5" fill="currentColor" strokeWidth={0} />

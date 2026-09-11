@@ -11,6 +11,10 @@ import { AlertsPage } from '@/pages/AlertsPage'
 import { UploadPage } from '@/pages/UploadPage'
 import { BlacklistPage } from '@/pages/BlacklistPage'
 import { queryClient } from '@/lib/query-client'
+import { NodesPage } from '@/pages/NodesPage'
+import { ReviewPage } from '@/pages/ReviewPage'
+import { LoginPage } from '@/pages/LoginPage'
+import { RequireAuth } from '@/routes/guards'
 
 export default function App() {
   return (
@@ -21,12 +25,18 @@ export default function App() {
             <ScanWipeProvider>
             <BrowserRouter>
               <Routes>
-                <Route path="/dashboard" element={<DashboardPage />} />
-                <Route path="/trajectory" element={<TrajectoryPage />} />
-                <Route path="/analytics" element={<AnalyticsPage />} />
-                <Route path="/alerts" element={<AlertsPage />} />
-                <Route path="/upload" element={<UploadPage />} />
-                <Route path="/blacklist" element={<BlacklistPage />} />
+                <Route path="/login" element={<LoginPage />} />
+                
+                {/* Protected Routes */}
+                <Route path="/dashboard" element={<RequireAuth><DashboardPage /></RequireAuth>} />
+                <Route path="/trajectory" element={<RequireAuth><TrajectoryPage /></RequireAuth>} />
+                <Route path="/analytics" element={<RequireAuth><AnalyticsPage /></RequireAuth>} />
+                <Route path="/alerts" element={<RequireAuth><AlertsPage /></RequireAuth>} />
+                <Route path="/upload" element={<RequireAuth><UploadPage /></RequireAuth>} />
+                <Route path="/blacklist" element={<RequireAuth><BlacklistPage /></RequireAuth>} />
+                <Route path="/nodes" element={<RequireAuth><NodesPage /></RequireAuth>} />
+                <Route path="/review" element={<RequireAuth><ReviewPage /></RequireAuth>} />
+                
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Routes>
@@ -38,4 +48,3 @@ export default function App() {
     </ErrorBoundary>
   )
 }
-

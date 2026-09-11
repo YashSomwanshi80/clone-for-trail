@@ -1,5 +1,5 @@
 import { javaDelete, javaGet, javaPost, javaPost_noAuth, javaPut, mockDelay, setAccessToken, USE_MOCKS, DEFAULT_CITY_ID, prefetchCsrf } from './http'
-import type { Alert, AnalyticsSnapshot, BlacklistEntry, Camera, CameraHealth, CongestionResponse, HeatmapPoint, HeatmapResponse, MediaJob, ODFlowEntry, OdMatrixResponse, Trajectory } from '@/types'
+import type { Alert, AnalyticsSnapshot, BlacklistEntry, Camera, CameraHealth, CongestionResponse, HeatmapPoint, HeatmapResponse, MediaJob, NodeInfo, ODFlowEntry, OdMatrixResponse, ReviewItem, Trajectory } from '@/types'
 import { alerts as seedAlerts, seedCameras, seedBlacklist, seedMedia, generateTrajectory, generateAnalyticsHistory, generateHeatmapData, odFlow as seedOdFlow } from '@/mocks/store'
 
 // ---------------------------------------------------------------------------
@@ -144,7 +144,7 @@ export const mediaApi = {
         manualGeoTag: null,
         fileName: '',
         fileType: payload.fileType,
-        status: 'PENDING',
+        status: 'PENDING', mediaType: 'IMAGE', capturedAt: new Date().toISOString(),
         createdAt: new Date().toISOString(),
       }
       seedMedia.unshift(job)
@@ -238,5 +238,37 @@ export const analyticsApi = {
     )
     // Map Java's `count` (long) → UI's `intensity` (number)
     return res.cells.map((c) => ({ lat: c.lat, lng: c.lng, intensity: Number(c.count) }))
+  },
+}
+
+// ---------------------------------------------------------------------------
+// Nodes (admin-only)
+// ---------------------------------------------------------------------------
+export const nodesApi = {
+  async create(payload: {
+    username: string
+    password: string
+    nodeName: string
+    lat: number
+    lng: number
+    cityId: string
+    stateId: string
+  }) {
+    return javaPost<NodeInfo>('/api/v1/nodes', payload)
+  },
+  async list() {
+    return javaGet<NodeInfo[]>('/api/v1/nodes')
+  },
+}
+
+// ---------------------------------------------------------------------------
+// Detection Review
+// ---------------------------------------------------------------------------
+export const reviewApi = {
+  async listPending(cityId: string) {
+    return javaGet<ReviewItem[]>(`/api/v1/detections/review?cityId=${encodeURIComponent(cityId)}`)
+  },
+  async verify(detectionId: number, payload: { correctedPlateNumber?: string; verifiedBy: string }) {
+    return javaPut<ReviewItem>(`/api/v1/detections/${detectionId}/verify`, payload)
   },
 }

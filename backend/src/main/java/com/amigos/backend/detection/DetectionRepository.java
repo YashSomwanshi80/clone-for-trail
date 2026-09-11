@@ -10,4 +10,5 @@ public interface DetectionRepository extends JpaRepository<Detection, Long> {
     Optional<Detection> findTopByPlateNumberOrderByTimestampDesc(String plateNumber);
     List<Detection> findByPlateNumberAndTimestampBetweenOrderByTimestampAsc(
         String plateNumber, Instant from, Instant to);
+    List<Detection> findByCityIdAndNeedsReviewTrueAndReviewedAtIsNull(String cityId);
 }

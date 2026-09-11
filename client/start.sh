@@ -20,6 +20,10 @@ if [ ! -d "node_modules" ]; then
   npm install
 fi
 
+
+echo "==> Cleaning up any zombie processes on port 5173..."
+fuser -k 5173/tcp 2>/dev/null || true
+
 echo "==> Starting React dev server on http://localhost:5173"
 echo "    Press Ctrl+C to stop."
 echo ""

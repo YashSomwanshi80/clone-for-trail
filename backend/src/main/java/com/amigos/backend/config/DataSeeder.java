@@ -27,6 +27,7 @@ public class DataSeeder implements CommandLineRunner {
         seedRoleIfMissing("TRAFFIC_POLICE", "Can query trajectories and manage blacklist/alerts");
         seedRoleIfMissing("CITY_ADMIN", "Full administrative access");
         seedRoleIfMissing("AUDITOR", "Read-only access to aggregate analytics");
+        seedRoleIfMissing("NODE", "Camera operator / node login");
 
         if (userRepository.count() == 0) {
             Role cityAdmin = roleRepository.findById("CITY_ADMIN").orElseThrow();

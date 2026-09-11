@@ -37,3 +37,4 @@ anpr:
   jwt-secret: "change-this-to-a-long-random-secret-at-least-32-bytes-for-local-dev"
   jwt-expiration-ms: 3600000
   refresh-token-expiration-days: 7
+  review-confidence-threshold: 0.85

@@ -287,7 +287,7 @@ export function UploadPage() {
                     </div>
                     <div className="mt-1 flex items-center justify-between text-[11px] text-text-tertiary">
                       <span className="mono-data">{h.result?.plateNumber || '—'}</span>
-                      <span>{formatDateTime(h.createdAt)}</span>
+                      <span>{formatDateTime(h.createdAt || '')}</span>
                     </div>
                   </div>
                 ))}

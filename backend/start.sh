@@ -17,6 +17,10 @@ if [ ! -f "$CONFIG" ]; then
   exit 1
 fi
 
+
+echo "==> Cleaning up any zombie processes on port 8080..."
+fuser -k 8080/tcp 2>/dev/null || true
+
 echo "==> Starting Java backend on port 8080..."
 echo "    (Building first — this may take a minute on a cold cache)"
 echo ""

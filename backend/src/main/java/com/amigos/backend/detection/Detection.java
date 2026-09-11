@@ -49,6 +49,15 @@ public class Detection {
     @Column(name = "ocr_engine_version", length = 32)
     private String ocrEngineVersion;
 
+    @Column(name = "needs_review", nullable = false)
+    private boolean needsReview = false;
+
+    @Column(name = "reviewed_at")
+    private Instant reviewedAt;
+
+    @Column(name = "reviewed_by")
+    private String reviewedBy;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 }

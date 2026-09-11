@@ -2,6 +2,7 @@ package com.amigos.backend.auth;
 
 import com.amigos.backend.auth.dto.AuthResponse;
 import com.amigos.backend.auth.dto.LoginRequest;
+import com.amigos.backend.camera.CameraRepository;
 import com.amigos.backend.user.User;
 import com.amigos.backend.user.UserService;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,13 +24,15 @@ public class AuthService {
     private final UserService userService;
     private final JwtTokenProvider jwtTokenProvider;
     private final RedisTemplate<String, String> redisTemplate;
+    private final CameraRepository cameraRepository;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     public AuthService(UserService userService, JwtTokenProvider jwtTokenProvider,
-                        RedisTemplate<String, String> redisTemplate) {
+                        RedisTemplate<String, String> redisTemplate, CameraRepository cameraRepository) {
         this.userService = userService;
         this.jwtTokenProvider = jwtTokenProvider;
         this.redisTemplate = redisTemplate;
+        this.cameraRepository = cameraRepository;
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -39,7 +42,7 @@ public class AuthService {
             throw new BadCredentialsException("Invalid username or password");
         }
 
-        return issueTokens(user.getUsername());
+        return issueTokens(user);
     }
 
     public AuthResponse refresh(String refreshToken) {
@@ -52,7 +55,8 @@ public class AuthService {
 
         // rotate: invalidate the old refresh token, issue a fresh pair
         redisTemplate.delete(redisKey);
-        return issueTokens(username);
+        User user = userService.loadByUsername(username);
+        return issueTokens(user);
     }
 
     public void logout(String refreshToken) {
@@ -62,16 +66,24 @@ public class AuthService {
         // access tokens), not an oversight. See conversation note.
     }
 
-    private AuthResponse issueTokens(String username) {
-        String accessToken = jwtTokenProvider.generateToken(username);
+    private AuthResponse issueTokens(User user) {
+        String accessToken = jwtTokenProvider.generateToken(user.getUsername());
         String refreshToken = jwtTokenProvider.generateOpaqueRefreshToken();
 
         redisTemplate.opsForValue().set(
             REFRESH_KEY_PREFIX + refreshToken,
-            username,
+            user.getUsername(),
             Duration.ofDays(refreshTokenExpirationDays)
         );
 
-        return new AuthResponse(accessToken, refreshToken, "Bearer");
+        String cameraId = user.getCameraId();
+        String cityId = null;
+        if (cameraId != null) {
+            cityId = cameraRepository.findById(cameraId)
+                .map(c -> c.getCityId())
+                .orElse(null);
+        }
+
+        return new AuthResponse(accessToken, refreshToken, "Bearer", cameraId, cityId);
     }
 }

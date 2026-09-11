@@ -37,6 +37,10 @@ else
   echo "WARNING: No venv found. Using system Python. Run 'python3 -m venv venv && pip install -r requirements.txt' first."
 fi
 
+
+echo "==> Cleaning up any zombie processes on port 8000..."
+fuser -k 8000/tcp 2>/dev/null || true
+
 echo "==> Starting ANPR engine on port 8000..."
 echo "    Press Ctrl+C to stop."
 echo ""

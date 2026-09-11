@@ -8,6 +8,7 @@ import com.amigos.backend.kafka.DetectionPersistedEvent;
 import com.amigos.backend.kafka.KafkaTopics;
 import com.amigos.backend.media.MediaRepository;
 import com.amigos.backend.media.MediaService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,9 @@ public class DetectionIngestionService {
     private final MediaRepository mediaRepository;
     private final MediaService mediaService;
     private final KafkaTemplate<String, DetectionPersistedEvent> kafkaTemplate;
+
+    @Value("${anpr.review-confidence-threshold}")
+    private double reviewConfidenceThreshold;
 
     public DetectionIngestionService(
             DetectionRepository detectionRepository,
@@ -47,6 +51,7 @@ public class DetectionIngestionService {
         detection.setTimestamp(event.timestamp());
         detection.setCroppedImagePath(event.croppedPlateImagePath());
         detection.setOcrEngineVersion(event.ocrEngineVersion());
+        detection.setNeedsReview(event.confidence() < reviewConfidenceThreshold);
 
         Detection saved = detectionRepository.save(detection);
         mediaService.markCompleted(event.mediaId());

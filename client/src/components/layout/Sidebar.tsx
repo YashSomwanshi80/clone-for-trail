@@ -11,11 +11,15 @@ import {
   Radio,
   Sun,
   Moon,
+  Server,
+  ScanEye,
+  LogOut,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTheme } from '@/context/ThemeContext'
 import { SystemStatusBadge } from '@/components/ui/Badge'
 import { camerasApi } from '@/lib/api/java'
+import { setAccessToken } from '@/lib/api/http'
 import type { SystemStatus } from '@/types'
 
 interface NavItem {
@@ -51,6 +55,13 @@ const GROUPS: NavGroup[] = [
       { to: '/blacklist', label: 'Blacklist', icon: ShieldAlert },
     ],
   },
+  {
+    label: 'Admin',
+    items: [
+      { to: '/nodes', label: 'Node Management', icon: Server },
+      { to: '/review', label: 'Manual Review', icon: ScanEye },
+    ],
+  },
 ]
 
 export function Sidebar() {
@@ -62,7 +73,7 @@ export function Sidebar() {
 
   useEffect(() => {
     if (!cameras || cameras.length === 0) return
-    const onlineRatio = cameras.filter((c) => c.status === 'ONLINE').length / cameras.length
+    const onlineRatio = cameras.filter((c) => c.status === 'ONLINE' || c.status === 'ACTIVE').length / cameras.length
     if (onlineRatio > 0.8) setSystemStatus('OPERATIONAL')
     else if (onlineRatio > 0.5) setSystemStatus('DEGRADED')
     else setSystemStatus('PARTIAL_OUTAGE')
@@ -121,6 +132,17 @@ export function Sidebar() {
           <span className="text-[11px] text-text-tertiary">System</span>
           <SystemStatusBadge status={systemStatus} />
         </div>
+        <button
+          type="button"
+          onClick={() => {
+            setAccessToken(null);
+            window.location.href = '/login';
+          }}
+          className="flex w-full items-center justify-between rounded-md bg-raised px-2.5 py-2 text-[11px] text-text-tertiary hover:text-critical transition-colors"
+        >
+          <span>Sign out</span>
+          <LogOut className="h-3.5 w-3.5" />
+        </button>
         <button
           type="button"
           onClick={toggleTheme}

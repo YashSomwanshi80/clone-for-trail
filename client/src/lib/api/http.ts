@@ -20,10 +20,12 @@ export class ApiError extends Error {
 //   Authorization: Bearer <accessToken>
 // Mutable so the auth service can update after login / refresh without a
 // module reload.
-let _accessToken: string | null = null
+let _accessToken: string | null = localStorage.getItem('anpr_access_token')
 
 export function setAccessToken(token: string | null) {
   _accessToken = token
+  if (token) localStorage.setItem('anpr_access_token', token)
+  else localStorage.removeItem('anpr_access_token')
 }
 
 export function getAccessToken(): string | null {
@@ -73,7 +75,7 @@ async function request<T>(baseUrl: string, path: string, options: RequestOptions
     if (csrfToken) finalHeaders['X-XSRF-TOKEN'] = csrfToken
   }
 
-  const res = await fetch(`${baseUrl}${path}`, { ...rest, headers: finalHeaders })
+  const res = await fetch(`${baseUrl}${path}`, { credentials: 'include', ...rest, headers: finalHeaders })
   if (!res.ok) {
     let message = `Request failed (${res.status})`
     try {

@@ -55,6 +55,13 @@ fi
 
 echo ""
 echo "All checks passed. Launching services..."
+
+echo "Cleaning up any old zombie processes..."
+fuser -k 9092/tcp 2>/dev/null || true
+fuser -k 8080/tcp 2>/dev/null || true
+fuser -k 8000/tcp 2>/dev/null || true
+fuser -k 5173/tcp 2>/dev/null || true
+echo "Cleanup done."
 echo ""
 
 # ---- helper: open a new terminal window/tab ---------------------------------
@@ -73,7 +80,7 @@ open_terminal() {
   else
     # Fallback: run in background and log to file
     echo "  (No GUI terminal detected — running $title in background, logging to /tmp/neuratransit-${title// /-}.log)"
-    bash -c "$cmd" > "/tmp/neuratransit-${title// /-}.log" 2>&1 &
+    nohup bash -c "$cmd" > "/tmp/neuratransit-${title// /-}.log" 2>&1 & disown
   fi
 }
 

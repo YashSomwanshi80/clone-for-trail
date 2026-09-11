@@ -6,7 +6,7 @@ export interface User {
   lastActive: string
 }
 
-export type CameraStatus = 'ONLINE' | 'OFFLINE' | 'MAINTENANCE'
+export type CameraStatus = 'ONLINE' | 'OFFLINE' | 'MAINTENANCE' | 'ACTIVE' | 'INACTIVE'
 
 export interface Camera {
   id: string
@@ -183,4 +183,24 @@ export type SystemStatus = 'OPERATIONAL' | 'DEGRADED' | 'PARTIAL_OUTAGE' | 'MAIN
 
 export interface ConnectionState {
   status: 'CONNECTING' | 'OPEN' | 'CLOSED' | 'RECONNECTING'
+}
+
+export interface NodeInfo {
+  userId: string
+  cameraId: string
+  nodeName: string
+  username: string
+  lat: number
+  lng: number
+  cityId: string
+}
+
+export interface ReviewItem {
+  detectionId: number
+  plateNumber: string
+  confidence: number
+  croppedImagePath: string | null
+  timestamp: string
+  cameraId: string | null
+  cityId: string
 }
