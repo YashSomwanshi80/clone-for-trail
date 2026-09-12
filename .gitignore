@@ -49,6 +49,13 @@ build/
 
 # ANPR runtime data (crops, temp video files) — can be large and regenerated
 anpr-engine/data/
+anpr-engine/tmp/
+anpr-engine/runs/
+anpr-engine/trained_models/
+anpr-engine/yolo_dataset/
+anpr-engine/**/*.onnx
+anpr-engine/**/*.keras
+anpr-engine/**/*.pt
 
 # ---- Java & Maven (backend) -------------------------------------------------
 backend/target/

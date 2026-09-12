@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 from fast_plate_ocr import LicensePlateRecognizer
 
-from config import settings  # use "from app.config import settings" if you kept the app/ package
+from config import settings
 
 # Rough Indian plate pattern: e.g. MH12AB1234, DL01CA0001, KA05MH1234.
 # Used to flag implausible OCR reads — not a hard filter, since some
@@ -13,10 +13,13 @@ INDIAN_PLATE_PATTERN = re.compile(r"^[A-Z]{2}[0-9]{1,2}[A-Z]{0,3}[0-9]{4}$")
 
 class PlateOCR:
     def __init__(self):
-        self.recognizer = LicensePlateRecognizer(settings.ocr_model_name)
+        self.recognizer = LicensePlateRecognizer(
+            onnx_model_path=settings.ocr_model_name,
+            plate_config_path=settings.ocr_plate_config_path,
+        )
 
     def read_plate(self, plate_crop: np.ndarray) -> tuple[str, float]:
-        # Model input: [batch, 70, 140, 1] uint8 grayscale — convert BGR→gray
+        # This OCR model expects a single-channel grayscale image — OpenCV crops are BGR
         gray = cv2.cvtColor(plate_crop, cv2.COLOR_BGR2GRAY) if plate_crop.ndim == 3 else plate_crop
 
         preds = self.recognizer.run(gray, return_confidence=True)

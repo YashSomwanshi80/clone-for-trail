@@ -11,6 +11,8 @@ class PlateDetector:
         if self.device != settings.device:
             print(f"[PlateDetector] CUDA not available — falling back to CPU")
 
+        # Loads our own fine-tuned weights (weights/plate_detector.pt),
+        # trained on the IND-VNP Indian vehicle dataset.
         self.model = YOLO(settings.yolo_weights_path)
         self.model.to(self.device)
 

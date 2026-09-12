@@ -4,7 +4,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     # -- Model paths --
     yolo_weights_path: str = "weights/plate_detector.pt"
-    ocr_model_name: str = "global-plates-mobile-vit-v2-model"
+    ocr_model_name: str = "trained_models/best.onnx"
+    ocr_plate_config_path: str = "config/indian_plates.yaml"
 
     # -- Inference --
     device: str = "cuda"            # "cuda" or "cpu" — falls back automatically if no GPU
@@ -19,15 +20,12 @@ class Settings(BaseSettings):
     java_base_url: str = "http://localhost:8080"
     java_detections_endpoint: str = "/api/internal/v1/detections"
     java_detections_batch_endpoint: str = "/api/internal/v1/detections/batch"
-    # NOTE: there is no /api/internal/v1/cameras endpoint in Java.
-    # Camera data lives at /api/v1/cameras (JWT-authenticated, not internal-key).
+    java_camera_registry_endpoint: str = "/api/internal/v1/cameras"
     outbound_retry_attempts: int = 3
     outbound_timeout_seconds: float = 5.0
 
     # -- Security (shared API key, Section 3 of SRS) --
-    # Must match anpr.internal-api-key in backend/src/main/resources/application.yaml.
-    # The .env file overrides this for prod; the default matches the dev application.yaml value.
-    service_api_key: str = "local-dev-internal-key-change-me"
+    service_api_key: str = "change-me-local-dev-key"
 
     # -- Misc / audit info (Section 3, GET /model-info) --
     ocr_engine_version: str = "fast-plate-ocr-1.1.0"

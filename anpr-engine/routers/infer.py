@@ -27,7 +27,7 @@ api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 
 def verify_api_key(key: str = Depends(api_key_header)):
-    if settings.service_api_key and key != settings.service_api_key:
+    if key != settings.service_api_key:
         raise HTTPException(status_code=401, detail="Invalid or missing API key")
     return key
 
